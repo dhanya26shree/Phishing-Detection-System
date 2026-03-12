@@ -1,0 +1,21 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+env/
+venv/
+ENV/
+
+# ML Models
+models/*.pkl
+
+# Logs
+logs/*.txt
+
+# Dataset
+dataset/*.csv
+
+# OS
+.DS_Store
+Thumbs.db

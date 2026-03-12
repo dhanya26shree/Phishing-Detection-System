@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Phish Shield AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav>
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            PHISH SHIELD AI
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Scanner</a>
+            <a href="dashboard.html" class="active">Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <h1>System Monitoring Dashboard</h1>
+            <p>Real-time oversight of detected phishing attempts and system health</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="glass-card stat-card">
+                <div class="stat-value" id="total-scanned">0</div>
+                <div class="stat-label">Total Phishing Logged</div>
+            </div>
+            <div class="glass-card stat-card">
+                <div class="stat-value" id="phishing-count" style="color: var(--danger);">0</div>
+                <div class="stat-label">Active Threats Blocked</div>
+            </div>
+            <div class="glass-card stat-card">
+                <div class="stat-value" style="color: var(--success);">100%</div>
+                <div class="stat-label">System Uptime</div>
+            </div>
+            <div class="glass-card stat-card">
+                <div class="stat-value" style="color: var(--primary);">2</div>
+                <div class="stat-label">AI Models Active</div>
+            </div>
+        </div>
+
+        <div class="scanner-section" style="margin-top: 2rem;">
+            <div class="glass-card">
+                <h2>Threat Detection Trends</h2>
+                <div class="chart-container">
+                    <canvas id="phishingChart"></canvas>
+                </div>
+            </div>
+            <div class="glass-card">
+                <h2>Real-Time Alert Feed</h2>
+                <div id="recent-threats" style="margin-top: 1rem; max-height: 250px; overflow-y: auto;">
+                    <p style="color: var(--text-secondary);">Listening for incoming threats...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card" style="margin-top: 2rem; text-align: center;">
+            <h2 style="margin-bottom: 0.5rem;">Threat Intelligence Integration</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Connected to global virus databases and phishing blacklists</p>
+            <div style="display: flex; justify-content: center; gap: 3rem; opacity: 0.6;">
+                <span>VIRUSTOTAL API: <strong style="color: var(--success);">CONNECTED</strong></span>
+                <span>GOOGLE SAFE BROWSING: <strong style="color: var(--success);">ACTIVE</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
