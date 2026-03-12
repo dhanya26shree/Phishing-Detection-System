@@ -1,8 +1,13 @@
-import joblib
+try:
+    import joblib
+    import numpy as np
+    import pandas as pd
+    DEPENDENCIES_AVAILABLE = True
+except (ImportError, ModuleNotFoundError):
+    DEPENDENCIES_AVAILABLE = False
+
 import os
 import sys
-import numpy as np
-import pandas as pd
 
 # Add the project root to sys.path for imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -34,8 +39,8 @@ class PredictionService:
             print(f"Error loading models: {e}")
 
     def predict_url(self, url):
-        if not self.url_model:
-            # Fallback/Mock logic if model is not trained
+        if not self.url_model or not DEPENDENCIES_AVAILABLE:
+            # Fallback/Mock logic if model is not trained or dependencies missing
             return self._heuristic_url_prediction(url)
         
         features = extract_url_features(url)
@@ -51,7 +56,7 @@ class PredictionService:
         return "phishing" if prediction == 1 else "legitimate", float(confidence)
 
     def predict_email(self, email_text):
-        if not self.email_model or not self.email_vectorizer:
+        if not self.email_model or not self.email_vectorizer or not DEPENDENCIES_AVAILABLE:
             return self._heuristic_email_prediction(email_text)
         
         processed_text = preprocess_email(email_text)
@@ -63,28 +68,40 @@ class PredictionService:
         return "phishing" if prediction == 1 else "legitimate", float(confidence)
 
     def _heuristic_url_prediction(self, url):
-        # Very simple heuristic as fallback
-        suspicious_keywords = ['login', 'secure', 'verify', 'bank', 'account']
+        # Enhanced heuristic logic
+        suspicious_keywords = ['login', 'secure', 'verify', 'bank', 'account', 'update', 'free', 'win', 'wp-content', 'action']
         score = 0
-        if any(kw in url.lower() for kw in suspicious_keywords):
-            score += 0.4
-        if url.count('.') > 3:
-            score += 0.3
-        if len(url) > 100:
-            score += 0.2
+        url_lower = url.lower()
         
-        confidence = min(0.5 + score, 0.9)
-        prediction = "phishing" if score > 0.4 else "legitimate"
+        if any(kw in url_lower for kw in suspicious_keywords):
+            score += 0.3
+        if url.count('.') > 3:
+            score += 0.2
+        if len(url) > 75:
+            score += 0.1
+        if '-' in url:
+            score += 0.1
+        if '@' in url:
+            score += 0.3
+        
+        confidence = min(0.6 + score, 0.95)
+        prediction = "phishing" if score >= 0.3 else "legitimate"
         return prediction, float(confidence)
 
     def _heuristic_email_prediction(self, email_text):
-        suspicious_keywords = ['win', 'prize', 'urgent', 'verify', 'account', 'gift card']
+        suspicious_keywords = [
+            'win', 'prize', 'urgent', 'verify', 'account', 'gift card', 
+            'suspended', 'unusual activity', 'action required', 'billing'
+        ]
         score = 0
-        if any(kw in email_text.lower() for kw in suspicious_keywords):
-            score += 0.5
+        email_lower = email_text.lower()
         
-        confidence = min(0.5 + score, 0.9)
-        prediction = "phishing" if score > 0.4 else "legitimate"
+        for kw in suspicious_keywords:
+            if kw in email_lower:
+                score += 0.2
+        
+        confidence = min(0.5 + score, 0.95)
+        prediction = "phishing" if score >= 0.4 else "legitimate"
         return prediction, float(confidence)
 
 prediction_service = PredictionService()

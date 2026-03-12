@@ -1,7 +1,11 @@
 import re
 import nltk
 from nltk.corpus import stopwords
-from sklearn.feature_extraction.text import TfidfVectorizer
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    SKLEARN_AVAILABLE = True
+except (ImportError, ModuleNotFoundError):
+    SKLEARN_AVAILABLE = False
 
 # Download stopwords if not already present
 try:
@@ -28,7 +32,11 @@ def preprocess_email(text):
 
 class EmailFeatureExtractor:
     def __init__(self, max_features=1000):
-        self.vectorizer = TfidfVectorizer(max_features=max_features)
+        if SKLEARN_AVAILABLE:
+            self.vectorizer = TfidfVectorizer(max_features=max_features)
+        else:
+            self.vectorizer = None
+            print("Warning: scikit-learn not available. EmailFeatureExtractor will not function correctly.")
     
     def fit(self, email_list):
         processed_emails = [preprocess_email(email) for email in email_list]
