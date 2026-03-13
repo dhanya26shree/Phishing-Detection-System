@@ -1,11 +1,13 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List, Optional
 import datetime
 import json
 import os
 
-from backend.prediction_service import prediction_service
+from api.scanner import scanner
 
 app = FastAPI(title="Phishing Detection API")
 
@@ -40,12 +42,15 @@ def log_prediction(data_type, input_data, prediction, confidence):
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Phishing Detection API", "status": "online"}
+    return FileResponse('frontend/index.html')
+
+# Mount the rest of the frontend files (js, css, etc.)
+app.mount("/", StaticFiles(directory="frontend"), name="frontend")
 
 @app.post("/predict-url", response_model=PredictionResponse)
 async def predict_url(request: URLRequest):
     try:
-        prediction, confidence = prediction_service.predict_url(request.url)
+        prediction, confidence = scanner.scan_url(request.url)
         timestamp = datetime.datetime.now().isoformat()
         
         # Log phishing attempts
@@ -63,7 +68,7 @@ async def predict_url(request: URLRequest):
 @app.post("/predict-email", response_model=PredictionResponse)
 async def predict_email(request: EmailRequest):
     try:
-        prediction, confidence = prediction_service.predict_email(request.email_text)
+        prediction, confidence = scanner.scan_email(request.email_text)
         timestamp = datetime.datetime.now().isoformat()
         
         # Log phishing attempts

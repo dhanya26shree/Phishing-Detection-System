@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlInput = document.getElementById('url-input');
     const emailInput = document.getElementById('email-input');
 
-    const API_BASE_URL = 'http://localhost:8000';
+    const API_BASE_URL = '';
 
     // Scanner Logic
     if (scanUrlBtn) {
