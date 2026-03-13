@@ -44,9 +44,6 @@ def log_prediction(data_type, input_data, prediction, confidence):
 def read_root():
     return FileResponse('frontend/index.html')
 
-# Mount the rest of the frontend files (js, css, etc.)
-app.mount("/", StaticFiles(directory="frontend"), name="frontend")
-
 @app.post("/predict-url", response_model=PredictionResponse)
 async def predict_url(request: URLRequest):
     try:
@@ -99,6 +96,9 @@ async def get_stats():
         "phishing_detected": len([l for l in logs if l['prediction'] == 'phishing']),
         "recent_alerts": logs[-5:]
     }
+
+# Mount the static files (js, css, etc.) at the end to avoid matching API routes
+app.mount("/", StaticFiles(directory="frontend"), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn
