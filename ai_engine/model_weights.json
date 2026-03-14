@@ -1,0 +1,23 @@
+{
+    "url_features": {
+        "suspicious_tld": 0.8,
+        "multiple_subdomains": 0.5,
+        "is_ip_address": 0.9,
+        "has_at_symbol": 0.7,
+        "dash_in_domain": 0.3,
+        "long_url": 0.4,
+        "phishing_keyword_match": 0.85
+    },
+    "keywords": {
+        "login": 0.6,
+        "secure": 0.5,
+        "update": 0.4,
+        "verify": 0.7,
+        "bank": 0.8,
+        "account": 0.6,
+        "paypal": 0.9,
+        "signin": 0.7,
+        "credential": 0.85
+    },
+    "threshold": 0.5
+}

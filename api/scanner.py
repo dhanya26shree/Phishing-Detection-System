@@ -1,4 +1,6 @@
 from api.threat_intel import threat_intel
+from blockchain.validator import check_domain_authenticity
+from ai_engine.predictor import ai_classifier
 import os
 import sys
 
@@ -22,20 +24,30 @@ class PhishingScanner:
 
     def scan_url(self, url):
         """
-        Comprehensive URL scan combining threat intelligence and ML/Heuristic models.
+        SIH Tiered Verification Pipeline:
+        1. Blockchain Consensus Check (Reputation)
+        2. Native AI Prediction (Pattern Probability)
+        3. Threat Intel Heuristics (Know Malicious)
         """
-        intel_result = threat_intel.check_url(url)
-        
-        # Use prediction service for deeper analysis
-        pred_label, confidence = self.prediction_service.predict_url(url)
+        # Step 1: Blockchain Domain Verification
+        is_verified, blockchain_data = check_domain_authenticity(url)
+        if is_verified:
+            # If blockchain says verified safe, we give it high weight
+            return "legitimate", 0.99 
 
-        # Final decision logic
-        if intel_result["is_threat"]:
+        # Step 2: Native AI Path
+        ai_pred, ai_confidence = ai_classifier.predict(url)
+        
+        # Step 3: Threat Intelligence Path
+        intel_result = threat_intel.check_url(url)
+
+        # Final Decision Synthesis
+        if intel_result["is_threat"] or ai_pred == "phishing":
             final_prediction = "phishing"
-            final_confidence = max(confidence, intel_result["threat_level"])
+            final_confidence = max(ai_confidence, intel_result["threat_level"])
         else:
-            final_prediction = pred_label
-            final_confidence = confidence
+            final_prediction = "legitimate"
+            final_confidence = ai_confidence
 
         return final_prediction, final_confidence
 
@@ -46,4 +58,5 @@ class PhishingScanner:
         return self.prediction_service.predict_email(email_text)
 
 scanner = PhishingScanner()
+
 

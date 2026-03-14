@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ url })
                 });
                 const data = await response.json();
+                console.log('URL Scan Data:', data);
                 displayResult('url', data);
                 updateStats(); // Update dashboard if on the same page
             } catch (error) {
@@ -59,18 +60,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function displayResult(type, data) {
+        console.log(`Displaying ${type} results:`, data);
         const badge = document.getElementById(`${type}-badge`);
-        const confidence = document.getElementById(`${type}-confidence`);
+        const confidenceElement = document.getElementById(`${type}-confidence`);
         const fill = document.getElementById(`${type}-meter-fill`);
+        
+        // Add Blockchain Badge if verified
+        const resultHeader = badge.parentElement;
+        let bcBadge = document.getElementById(`${type}-blockchain-badge`);
+        if (!bcBadge) {
+            bcBadge = document.createElement('span');
+            bcBadge.id = `${type}-blockchain-badge`;
+            bcBadge.style.fontSize = '0.7rem';
+            bcBadge.style.padding = '0.2rem 0.5rem';
+            bcBadge.style.borderRadius = '20px';
+            bcBadge.style.marginLeft = '1rem';
+            bcBadge.style.display = 'none';
+            resultHeader.appendChild(bcBadge);
+        }
+
+        if (!data || data.prediction === undefined) {
+            console.error('Invalid data received from API:', data);
+            badge.textContent = 'Error';
+            confidenceElement.textContent = '0';
+            return;
+        }
 
         badge.textContent = data.prediction;
         badge.className = `result-badge badge-${data.prediction}`;
         
-        const confValue = Math.round(data.confidence * 100);
-        confidence.textContent = confValue;
-        fill.style.width = `${confValue}%`;
+        // Blockchain Visibility
+        if (data.confidence >= 0.99 && data.prediction === 'legitimate') {
+            bcBadge.textContent = 'Verified on Blockchain';
+            bcBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+            bcBadge.style.color = '#10b981';
+            bcBadge.style.border = '1px solid #10b981';
+            bcBadge.style.display = 'inline-block';
+        } else {
+            bcBadge.style.display = 'none';
+        }
+
+        let confValue = 0;
+        if (typeof data.confidence === 'number') {
+            confValue = Math.round(data.confidence * 100);
+        } else if (typeof data.confidence === 'string') {
+            confValue = Math.round(parseFloat(data.confidence) * 100) || 0;
+        }
+
+        confidenceElement.textContent = isNaN(confValue) ? '0' : confValue;
+        fill.style.width = `${isNaN(confValue) ? 0 : confValue}%`;
         
-        // Color the meter based on prediction
         fill.style.background = data.prediction === 'phishing' ? 'var(--danger)' : 'var(--success)';
     }
 
@@ -80,9 +119,34 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`${API_BASE_URL}/stats`);
             const data = await response.json();
             
+            const bcResponse = await fetch(`${API_BASE_URL}/blockchain`);
+            const bcData = await bcResponse.json();
+            
             const totalScanned = document.getElementById('total-scanned');
             const phishingCount = document.getElementById('phishing-count');
             const threatList = document.getElementById('recent-threats');
+
+            // Update Blockchain Node Count
+            const nodeCountElement = document.getElementById('blockchain-nodes');
+            if (nodeCountElement) nodeCountElement.textContent = bcData.chain.length;
+
+            const explorer = document.getElementById('ledger-explorer');
+            if (explorer) {
+                explorer.innerHTML = bcData.chain.map(block => `
+                    <div class="ledger-block">
+                        <div class="block-header">
+                            <span>BLOCK #${block.index}</span>
+                            <span style="color: grey;">${new Date(block.timestamp * 1000).toLocaleTimeString()}</span>
+                        </div>
+                        <div class="block-data">
+                            <div style="font-weight: bold; margin-bottom: 0.2rem;">${typeof block.data === 'string' ? block.data : block.data.domain_name || 'System Event'}</div>
+                            <div style="font-size: 0.7rem; opacity: 0.7;">Status: ${block.data.status || 'Active'}<sup>BC</sup></div>
+                        </div>
+                        <div style="font-size: 0.65rem; color: var(--text-secondary);">PREV: ${block.previous_hash.substring(0, 10)}...</div>
+                        <div class="block-hash">HASH: ${block.hash.substring(0, 24)}...</div>
+                    </div>
+                `).join('');
+            }
 
             if (totalScanned) totalScanned.textContent = data.total_scanned;
             if (phishingCount) phishingCount.textContent = data.phishing_detected;

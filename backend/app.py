@@ -8,6 +8,7 @@ import json
 import os
 
 from api.scanner import scanner
+from blockchain.ledger import ledger
 
 app = FastAPI(title="Phishing Detection API")
 
@@ -41,8 +42,12 @@ def log_prediction(data_type, input_data, prediction, confidence):
         f.write(json.dumps(log_entry) + "\n")
 
 @app.get("/")
-def read_root():
+async def read_root():
     return FileResponse('frontend/index.html')
+
+@app.get("/dashboard")
+async def read_dashboard():
+    return FileResponse('frontend/dashboard.html')
 
 @app.post("/predict-url", response_model=PredictionResponse)
 async def predict_url(request: URLRequest):
@@ -50,9 +55,8 @@ async def predict_url(request: URLRequest):
         prediction, confidence = scanner.scan_url(request.url)
         timestamp = datetime.datetime.now().isoformat()
         
-        # Log phishing attempts
-        if prediction == "phishing":
-            log_prediction("url", request.url, prediction, confidence)
+        # Log all attempts for stats
+        log_prediction("url", request.url, prediction, confidence)
             
         return PredictionResponse(
             prediction=prediction,
@@ -68,9 +72,8 @@ async def predict_email(request: EmailRequest):
         prediction, confidence = scanner.scan_email(request.email_text)
         timestamp = datetime.datetime.now().isoformat()
         
-        # Log phishing attempts
-        if prediction == "phishing":
-            log_prediction("email", request.email_text, prediction, confidence)
+        # Log all attempts for stats
+        log_prediction("email", request.email_text, prediction, confidence)
             
         return PredictionResponse(
             prediction=prediction,
@@ -92,12 +95,29 @@ async def get_stats():
             logs.append(json.loads(line))
     
     return {
-        "total_scanned": len(logs), # Note: this only counts phishing since we only log phishing for now
+        "total_scanned": len(logs),
         "phishing_detected": len([l for l in logs if l['prediction'] == 'phishing']),
-        "recent_alerts": logs[-5:]
+        "recent_alerts": [l for l in logs if l['prediction'] == 'phishing'][-5:]
     }
 
-# Mount the static files (js, css, etc.) at the end to avoid matching API routes
+@app.get("/blockchain")
+async def get_blockchain():
+    # Return the simulated blockchain ledger
+    return {
+        "chain": [
+            {
+                "index": b.index,
+                "timestamp": b.timestamp,
+                "data": b.data,
+                "previous_hash": b.previous_hash,
+                "hash": b.hash
+            } for b in ledger.chain
+        ]
+    }
+
+# Mount the static files (js, css, etc.)
+# We mount this at root but at the very end. 
+# Explicitly serving HTML above is better.
 app.mount("/", StaticFiles(directory="frontend"), name="frontend")
 
 if __name__ == "__main__":
