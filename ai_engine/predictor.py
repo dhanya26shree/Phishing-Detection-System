@@ -32,17 +32,25 @@ class NativeAIClassifier:
             score += (total_keyword_weight / keyword_hits) * 0.4
 
         # Structural Analysis
-        if any(url_lower.endswith(tld) for tld in ['.xyz', '.top', '.pw', '.click', '.loan']):
-            score += self.weights["url_features"].get("suspicious_tld", 0.8) * 0.3
+        from urllib.parse import urlparse
+        parsed = urlparse(url if '://' in url else f'http://{url}')
+        domain = parsed.netloc or parsed.path.split('/')[0]
         
-        if url.count('.') > 3:
+        suspicious_tlds = {'.xyz', '.top', '.pw', '.click', '.loan', '.bid', '.stream'}
+        if any(domain.endswith(tld) for tld in suspicious_tlds):
+            score += self.weights["url_features"].get("suspicious_tld", 0.8) * 0.4
+        
+        if domain.count('.') > 2: # e.g. subdomain.domain.com
             score += self.weights["url_features"].get("multiple_subdomains", 0.5) * 0.1
             
-        if '@' in url:
+        if '@' in url_lower:
             score += self.weights["url_features"].get("has_at_symbol", 0.7) * 0.2
 
+        if '-' in domain: # Phishing often uses hyphens
+             score += 0.1
+
         # Sigmoid-like normalization
-        probability = 1 / (1 + math.exp(-10 * (score - 0.5)))
+        probability = 1 / (1 + math.exp(-10 * (score - 0.45)))
         return probability
 
     def predict(self, url):

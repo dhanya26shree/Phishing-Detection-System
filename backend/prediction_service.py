@@ -56,16 +56,14 @@ class PredictionService:
         return "phishing" if prediction == 1 else "legitimate", float(confidence)
 
     def predict_email(self, email_text):
-        if not self.email_model or not self.email_vectorizer or not DEPENDENCIES_AVAILABLE:
-            return self._heuristic_email_prediction(email_text)
+        """
+        Uses the native NLP engine for email classification.
+        No scikit-learn dependency required.
+        """
+        from nlp_email_detector.model import ai_email_detector
         
-        processed_text = preprocess_email(email_text)
-        features = self.email_vectorizer.transform([processed_text])
-        
-        prediction = self.email_model.predict(features)[0]
-        confidence = np.max(self.email_model.predict_proba(features))
-        
-        return "phishing" if prediction == 1 else "legitimate", float(confidence)
+        prediction, confidence = ai_email_detector.predict(email_text)
+        return prediction, confidence
 
     def _heuristic_url_prediction(self, url):
         # Enhanced heuristic logic
