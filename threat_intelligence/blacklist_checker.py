@@ -1,11 +1,16 @@
 class BlacklistChecker:
     def __init__(self):
-        # In a real system, this would load from a database or API
-        self.blacklist = [
+        # Sample set of known phishing domains for SIH demonstration
+        self.blacklist = {
             "malicious-site.com",
             "phish-login.net",
-            "secure-bank-update.org"
-        ]
+            "secure-bank-update.org",
+            "paypal-verify-account.top",
+            "apple-support-security.xyz",
+            "microsoft-login-update.bid",
+            "netf-lix-login.stream",
+            "amazon-prime-gift.click"
+        }
 
     def is_blacklisted(self, domain):
         return domain in self.blacklist
