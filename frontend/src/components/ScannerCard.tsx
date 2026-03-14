@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { WarningGraphic } from './ui/warning-graphic';
+import { useState } from 'react';
+import { WarningGraphic } from '@/components/ui/warning-graphic';
 import { cn } from '@/lib/utils';
 
 interface ScanResult {

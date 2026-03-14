@@ -58,11 +58,12 @@ def log_prediction(data_type, input_data, prediction, confidence):
 
 @app.get("/")
 async def read_root():
-    return FileResponse('frontend/index.html')
+    return FileResponse('frontend/dist/index.html')
 
 @app.get("/dashboard")
 async def read_dashboard():
-    return FileResponse('frontend/dashboard.html')
+    # React Router handles dashboard in a SPA, but for now we serve index
+    return FileResponse('frontend/dist/index.html')
 
 @app.post("/predict-url", response_model=PredictionResponse)
 async def predict_url(request: URLRequest):
@@ -133,7 +134,7 @@ async def get_blockchain():
 # Mount the static files (js, css, etc.)
 # We mount this at root but at the very end. 
 # Explicitly serving HTML above is better.
-app.mount("/", StaticFiles(directory="frontend"), name="frontend")
+app.mount("/", StaticFiles(directory="frontend/dist"), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn
