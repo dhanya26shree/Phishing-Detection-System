@@ -1,40 +1,76 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #1d4ed8;
+  --color-primary: #3b82f6;
+  --color-primary-dark: #2563eb;
   --color-danger: #ef4444;
   --color-success: #10b981;
   --color-warning: #fbc221;
+  --color-accent: #8b5cf6;
+  
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
 }
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #0f172a;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  color-scheme: dark;
+  --bg: #030712;
+  --card-bg: rgba(17, 24, 39, 0.7);
+  --border-glow: rgba(59, 130, 246, 0.2);
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-200 antialiased selection:bg-blue-500/30;
+    margin: 0;
+    overflow-x: hidden;
+  }
 }
 
-.glass-card {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+@layer components {
+  .glass-container {
+    @apply relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-300;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  }
+
+  .glass-card {
+    @apply glass-container p-6 md:p-8;
+  }
+
+  .glass-card:hover {
+    @apply border-white/20 bg-white/10;
+    box-shadow: 0 12px 48px 0 rgba(0, 0, 0, 0.5), 0 0 20px 0 var(--border-glow);
+  }
+
+  .nav-blur {
+    @apply sticky top-0 z-50 border-b border-white/5 bg-slate-950/80 backdrop-blur-md;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-blue-500 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .hero-gradient {
+    background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-slate-800 hover:bg-slate-700;
 }
