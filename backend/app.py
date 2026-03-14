@@ -14,7 +14,18 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from api.scanner import scanner
 from blockchain.ledger import ledger
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(title="Phishing Detection API")
+
+# Configure CORS for development
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class URLRequest(BaseModel):
     url: str

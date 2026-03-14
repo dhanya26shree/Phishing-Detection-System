@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Phishing Shield | Real-time Detection</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav>
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            PHISH SHIELD AI
+        </div>
+        <div class="nav-links">
+            <a href="index.html" class="active">Scanner</a>
+            <a href="dashboard.html">Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <h1>Real-Time Phishing Detection</h1>
+            <p>Secure your digital life with advanced AI-powered threat analysis</p>
+            
+            <div class="stats-bar" style="margin-top: 2rem; display: flex; gap: 2rem; justify-content: center;">
+                <div class="stat-item">
+                    <span class="stat-value" id="total-scanned">0</span>
+                    <span class="stat-label">Scanned</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="phishing-count" style="color: var(--danger);">0</span>
+                    <span class="stat-label">Phishing</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="blockchain-nodes" style="color: #10b981;">0</span>
+                    <span class="stat-label">Chain Blocks</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="scanner-section">
+            <div class="glass-card">
+                <div class="input-group">
+                    <label for="url-input">Analyze URL</label>
+                    <input type="text" id="url-input" placeholder="https://example.com/login">
+                </div>
+                <button class="btn btn-primary" id="scan-url-btn">Scan URL</button>
+                
+                <div id="url-result" style="display: none; margin-top: 2rem;">
+                    <h3 id="url-status-text">Analysis Result</h3>
+                    <span id="url-badge" class="result-badge"></span>
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">Confidence Score: <span id="url-confidence">0</span>%</p>
+                    <div class="confidence-meter">
+                        <div id="url-meter-fill" class="confidence-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div class="input-group">
+                    <label for="email-input">Analyze Email Content</label>
+                    <textarea id="email-input" placeholder="Paste the email content here..."></textarea>
+                </div>
+                <button class="btn btn-primary" id="scan-email-btn">Scan Email</button>
+
+                <div id="email-result" style="display: none; margin-top: 2rem;">
+                    <h3 id="email-status-text">Analysis Result</h3>
+                    <span id="email-badge" class="result-badge"></span>
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">Confidence Score: <span id="email-confidence">0</span>%</p>
+                    <div class="confidence-meter">
+                        <div id="email-meter-fill" class="confidence-fill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card" style="margin-top: 2rem;">
+            <h2>Recent Threats Detected</h2>
+            <div id="recent-threats" style="margin-top: 1rem;">
+                <p style="color: var(--text-secondary);">Loading real-time threat intelligence...</p>
+            </div>
+            <a href="dashboard.html" style="display: block; margin-top: 1.5rem; color: var(--primary); font-weight: 600; text-decoration: none;">View Full Dashboard →</a>
+        </div>
+
+        <div class="glass-card" style="margin-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Blockchain Ledger Explorer</h2>
+                <span style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid #10b981;">Network: Connected</span>
+            </div>
+            <div id="ledger-explorer" style="margin-top: 1.5rem; display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem;">
+                <!-- Blocks will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
