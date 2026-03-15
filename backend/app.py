@@ -37,11 +37,12 @@ class PredictionResponse(BaseModel):
     prediction: str
     confidence: float
     timestamp: str
+    signals: List[str] = []
 
 # Logging helper
 LOG_FILE = "logs/phishing_logs.txt"
 
-def log_prediction(data_type, input_data, prediction, confidence):
+def log_prediction(data_type, input_data, prediction, confidence, signals=[]):
     if not os.path.exists('logs'):
         os.makedirs('logs')
     
@@ -50,7 +51,8 @@ def log_prediction(data_type, input_data, prediction, confidence):
         "type": data_type,
         "input": input_data,
         "prediction": prediction,
-        "confidence": confidence
+        "confidence": confidence,
+        "signals": signals
     }
     
     with open(LOG_FILE, "a") as f:
@@ -68,16 +70,17 @@ async def read_dashboard():
 @app.post("/predict-url", response_model=PredictionResponse)
 async def predict_url(request: URLRequest):
     try:
-        prediction, confidence = scanner.scan_url(request.url)
+        prediction, confidence, signals = scanner.scan_url(request.url)
         timestamp = datetime.datetime.now().isoformat()
         
         # Log all attempts for stats
-        log_prediction("url", request.url, prediction, confidence)
+        log_prediction("url", request.url, prediction, confidence, signals)
             
         return PredictionResponse(
             prediction=prediction,
             confidence=confidence,
-            timestamp=timestamp
+            timestamp=timestamp,
+            signals=signals
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -85,16 +88,24 @@ async def predict_url(request: URLRequest):
 @app.post("/predict-email", response_model=PredictionResponse)
 async def predict_email(request: EmailRequest):
     try:
-        prediction, confidence = scanner.scan_email(request.email_text)
+        # scan_email currently returns (pred, conf) - updating to match pattern
+        result = scanner.scan_email(request.email_text)
+        if isinstance(result, tuple) and len(result) == 3:
+            prediction, confidence, signals = result
+        else:
+            prediction, confidence = result
+            signals = ["Standard Lexical Analysis Applied"]
+            
         timestamp = datetime.datetime.now().isoformat()
         
         # Log all attempts for stats
-        log_prediction("email", request.email_text, prediction, confidence)
+        log_prediction("email", request.email_text, prediction, confidence, signals)
             
         return PredictionResponse(
             prediction=prediction,
             confidence=confidence,
-            timestamp=timestamp
+            timestamp=timestamp,
+            signals=signals
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -29,27 +29,35 @@ class PhishingScanner:
         2. Native AI Prediction (Pattern Probability)
         3. Threat Intel Heuristics (Know Malicious)
         """
+        signals = []
         # Step 1: Blockchain Domain Verification
         is_verified, blockchain_data = check_domain_authenticity(url)
         if is_verified:
-            # If blockchain says verified safe, we give it high weight
-            return "legitimate", 0.99 
+            signals.append("Domain verified safe via Immutable Blockchain Ledger")
+            return "legitimate", 0.99, signals
 
         # Step 2: Native AI Path
-        ai_pred, ai_confidence = ai_classifier.predict(url)
+        ai_pred, ai_confidence, ai_signals = ai_classifier.predict(url)
+        signals.extend(ai_signals)
         
         # Step 3: Threat Intelligence Path
         intel_result = threat_intel.check_url(url)
+        if intel_result["is_threat"]:
+            signals.append(f"Threat Intel Alert: Matches known malicious pattern ({intel_result.get('threat_type', 'Phishing')})")
 
         # Final Decision Synthesis
-        if intel_result["is_threat"] or ai_pred == "phishing":
+        final_prediction = ai_pred
+        final_confidence = ai_confidence
+
+        if intel_result["is_threat"]:
             final_prediction = "phishing"
             final_confidence = max(ai_confidence, intel_result["threat_level"])
-        else:
-            final_prediction = "legitimate"
-            final_confidence = ai_confidence
+        
+        # Add intelligence layer signals
+        if intel_result["threat_level"] > 0.7:
+             signals.append("High-risk heuristics detected by intelligence layer")
 
-        return final_prediction, final_confidence
+        return final_prediction, final_confidence, signals
 
     def scan_email(self, email_text):
         """
