@@ -5,15 +5,15 @@ import { Dashboard } from './pages/Dashboard'
 import { motion, AnimatePresence } from 'framer-motion'
 
 function App() {
-  const [currentView, setCurrentView] = useState<'landing' | 'login' | 'dashboard'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'login' | 'dashboard'>('login');
 
   // Handle URL sync and browser back/forward
   useEffect(() => {
     const handlePath = () => {
       const path = window.location.pathname;
-      if (path === '/login') setCurrentView('login');
+      if (path === '/landing') setCurrentView('landing');
       else if (path === '/dashboard') setCurrentView('dashboard');
-      else setCurrentView('landing');
+      else setCurrentView('login');
     };
 
     handlePath();
@@ -23,7 +23,7 @@ function App() {
 
   const navigateTo = (view: 'landing' | 'login' | 'dashboard') => {
     setCurrentView(view);
-    window.history.pushState({}, '', view === 'landing' ? '/' : `/${view}`);
+    window.history.pushState({}, '', view === 'login' ? '/' : `/${view}`);
   };
 
   return (
