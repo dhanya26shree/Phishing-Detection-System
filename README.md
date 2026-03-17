@@ -71,4 +71,4 @@ The system uses a **Random Forest Classifier** trained on high-signal features:
 - Real-time WHOIS and SSL certificate validation.
 
 ---
-*Created by [Your Name] for Cybersecurity Portfolio*
+*Created by your engineer, for Cybersecurity Portfolio*
