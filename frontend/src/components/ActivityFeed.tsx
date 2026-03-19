@@ -7,7 +7,11 @@ interface LogEntry {
   timestamp: string;
 }
 
-export function ActivityFeed() {
+interface ActivityFeedProps {
+  expanded?: boolean;
+}
+
+export function ActivityFeed({ expanded = false }: ActivityFeedProps = {}) {
   const [logs, setLogs] = useState<LogEntry[]>([
     { id: 1, message: "Kernel_Init: Neural Engine V4.2 active", type: 'info', timestamp: '21:15:02' },
     { id: 2, message: "Ledger_Sync: SIH_Mainnet node synchronized", type: 'success', timestamp: '21:15:05' },
@@ -49,7 +53,7 @@ export function ActivityFeed() {
   }, [logs]);
 
   return (
-    <div className="glass-container flex flex-col h-full bg-slate-950/50 border border-cyan-500/10 rounded-2xl overflow-hidden shadow-inner">
+    <div className={`glass-container flex flex-col h-full bg-slate-950/50 border border-cyan-500/10 rounded-2xl overflow-hidden shadow-inner ${expanded ? 'min-h-[400px]' : ''}`}>
       <div className="px-4 py-2 bg-slate-900/80 border-b border-cyan-500/10 flex items-center justify-between">
         <span className="text-[10px] font-mono font-black text-cyan-500 uppercase tracking-widest">Live_Terminal_Feed</span>
         <div className="flex gap-1">

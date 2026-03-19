@@ -28,13 +28,6 @@ function App() {
 
   return (
     <div className="min-h-screen selection:bg-cyan-500/30 bg-slate-950 relative overflow-hidden font-sans cursor-default">
-      {/* Absolute Shared Background Engine */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 cyber-grid opacity-20" />
-        <div className="cyber-scanline" />
-        <div className="absolute top-0 left-0 w-full h-1 bg-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.4)]" />
-      </div>
-
       {/* Global Transition Container */}
       <div className="relative z-10">
         <AnimatePresence mode="wait">
@@ -58,7 +51,7 @@ function App() {
               exit={{ opacity: 0, scale: 1.05 }}
               transition={{ duration: 0.3 }}
             >
-              <LoginPage onBack={() => navigateTo('landing')} onLogin={() => navigateTo('dashboard')} />
+              <LoginPage onLogin={() => navigateTo('dashboard')} />
             </motion.div>
           )}
 
@@ -70,7 +63,7 @@ function App() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
             >
-              <Dashboard onLogout={() => navigateTo('landing')} />
+              <Dashboard onLogout={() => navigateTo('login')} />
             </motion.div>
           )}
         </AnimatePresence>
