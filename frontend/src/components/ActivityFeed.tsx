@@ -26,10 +26,38 @@ export function ActivityFeed({ expanded = false }: ActivityFeedProps = {}) {
       type,
       timestamp: new Date().toLocaleTimeString([], { hour12: false }),
     };
-    setLogs(prev => [...prev.slice(-14), newLog]);
+    setLogs(prev => {
+      const combined = [...prev, newLog];
+      return combined.slice(-20);
+    });
   };
 
   useEffect(() => {
+    // Initial history import
+    const history = JSON.parse(localStorage.getItem('phishShieldScanHistory') || '[]');
+    if (history.length > 0) {
+      const historyLogs: LogEntry[] = history.slice(0, 5).reverse().map((h: any) => ({
+        id: h.id + Math.random(),
+        message: `${h.prediction === 'phishing' ? 'THREAT_DETECTED' : 'SCAN_CLEARED'}: ${h.url.substring(0, 30)}${h.url.length > 30 ? '...' : ''}`,
+        type: h.prediction === 'phishing' ? 'error' : 'success',
+        timestamp: new Date(h.timestamp).toLocaleTimeString([], { hour12: false })
+      }));
+      setLogs(prev => [...prev, ...historyLogs].slice(-20));
+    }
+
+    // Listen for real-time events
+    const handleNewScan = (e: any) => {
+      const scan = e.detail;
+      if (scan) {
+        addLog(
+          `${scan.prediction === 'phishing' ? 'CRITICAL_VULNERABILITY' : 'SECURITY_INTEGRITY'}: [Target: ${scan.url.substring(0, 25)}${scan.url.length > 25 ? '...' : ''}]`,
+          scan.prediction === 'phishing' ? 'error' : 'success'
+        );
+      }
+    };
+
+    window.addEventListener('phishshield-new-scan', handleNewScan as EventListener);
+
     const interval = setInterval(() => {
       const messages = [
         "Analyzing packet signature: 0x4f...2e",
@@ -37,13 +65,18 @@ export function ActivityFeed({ expanded = false }: ActivityFeedProps = {}) {
         "Decrypting SSL handshake... Success",
         "Threat intel DB updated: +12 nodes",
         "AI Confidence recalibrating...",
-        "Suspicious pattern detected: Lexical anomaly"
+        "Suspicious pattern detected: Lexical anomaly",
+        "Blockchain consensus reached on block 0xFD...2A",
+        "Neutral network weights optimized"
       ];
       const randomMsg = messages[Math.floor(Math.random() * messages.length)];
-      addLog(randomMsg, Math.random() > 0.8 ? 'warn' : 'info');
-    }, 4000);
+      addLog(randomMsg, Math.random() > 0.9 ? 'warn' : 'info');
+    }, 6000);
 
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener('phishshield-new-scan', handleNewScan as EventListener);
+      clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {

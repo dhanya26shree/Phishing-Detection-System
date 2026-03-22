@@ -184,7 +184,7 @@ export function ScannerCard({ title, description, label, placeholder, type, onSc
   const isSuspicious = result?.prediction === 'suspicious';
 
   return (
-    <div className="glass-card flex flex-col h-full group/card relative">
+    <div className="glass-card flex flex-col min-h-[440px] group/card relative">
       {/* HUD Corner Brackets */}
       <div className="absolute top-4 left-4 w-4 h-4 border-l-2 border-t-2 border-cyan-500/20 rounded-tl-sm group-hover/card:border-cyan-500/50 transition-colors" />
       <div className="absolute top-4 right-4 w-4 h-4 border-r-2 border-t-2 border-cyan-500/20 rounded-tr-sm group-hover/card:border-cyan-500/50 transition-colors" />

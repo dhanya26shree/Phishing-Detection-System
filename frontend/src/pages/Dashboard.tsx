@@ -89,14 +89,28 @@ export function Dashboard(props: DashboardProps) {
       const data = await res.json();
       setStats(data);
     } catch (e) {
-      console.error('Failed to fetch stats', e);
+      console.warn('Backend stats unavailable, syncing from local history');
+      const history = JSON.parse(localStorage.getItem('phishShieldScanHistory') || '[]');
+      const phishingCount = history.filter((h: any) => h.prediction === 'phishing').length;
+      setStats({
+        total_scanned: history.length,
+        phishing_detected: phishingCount
+      });
     }
   };
 
   useEffect(() => {
     fetchStats();
+    // Listen for local scans if backend is down
+    const handleLocalUpdate = () => {
+      fetchStats();
+    };
+    window.addEventListener('phishshield-new-scan', handleLocalUpdate);
     const interval = setInterval(fetchStats, 10000);
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener('phishshield-new-scan', handleLocalUpdate);
+      clearInterval(interval);
+    };
   }, []);
 
   const scanUrl = async (url: string) => {
@@ -132,7 +146,9 @@ export function Dashboard(props: DashboardProps) {
     };
     history.unshift(newEntry);
     localStorage.setItem('phishShieldScanHistory', JSON.stringify(history.slice(0, 20)));
-    window.dispatchEvent(new Event('phishshield-new-scan'));
+    
+    // Dispatch event with data for components to react
+    window.dispatchEvent(new CustomEvent('phishshield-new-scan', { detail: newEntry }));
     fetchStats();
     return result;
   };
@@ -312,7 +328,7 @@ export function Dashboard(props: DashboardProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.3 }}
-                className="grid lg:grid-cols-2 gap-8"
+                className="grid lg:grid-cols-2 gap-8 items-start"
               >
                 <ScannerCard
                   title="URL Deep Analysis"
