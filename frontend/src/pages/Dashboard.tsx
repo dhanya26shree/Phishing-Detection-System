@@ -5,6 +5,7 @@ import { ThreatIntelligence } from '../components/ThreatIntelligence';
 import { SystemStatus } from '../components/SystemStatus';
 import { ScannerCard } from '../components/ScannerCard';
 import { BlockchainModule } from '../components/BlockchainModule';
+import { computeSHA256, getVerificationData } from '../lib/crypto';
 
 const API_BASE = 'http://localhost:8000';
 
@@ -136,9 +137,15 @@ export function Dashboard(props: DashboardProps) {
 
     // Persist to localStorage for blockchain ledger
     const history = JSON.parse(localStorage.getItem('phishShieldScanHistory') || '[]');
+    const verificationData = getVerificationData({
+      url,
+      timestamp: result.timestamp || new Date().toISOString(),
+      prediction: result.prediction
+    });
+    
     const newEntry = {
       id: history.length + 1,
-      hash: generateFakeHash(url + result.timestamp),
+      hash: await computeSHA256(verificationData),
       url,
       prediction: result.prediction,
       confidence: result.confidence,
@@ -173,19 +180,30 @@ export function Dashboard(props: DashboardProps) {
         signals: isSus ? ['Urgency keyword detected', 'Suspicious link hidden in text'] : ['No malicious patterns found']
       };
     }
+    // Persist email scans to ledger too
+    const history = JSON.parse(localStorage.getItem('phishShieldScanHistory') || '[]');
+    const verificationData = getVerificationData({
+      url: email_text.substring(0, 50) + '...', // use snippet as identifier
+      timestamp: result.timestamp || new Date().toISOString(),
+      prediction: result.prediction
+    });
+    
+    const newEntry = {
+      id: history.length + 1,
+      hash: await computeSHA256(verificationData),
+      url: email_text.substring(0, 50) + '...',
+      prediction: result.prediction,
+      confidence: result.confidence,
+      timestamp: result.timestamp || new Date().toISOString(),
+    };
+    history.unshift(newEntry);
+    localStorage.setItem('phishShieldScanHistory', JSON.stringify(history.slice(0, 20)));
+    
+    // Dispatch event
+    window.dispatchEvent(new CustomEvent('phishshield-new-scan', { detail: newEntry }));
     fetchStats();
     return result;
   };
-
-  // Client-side hash generation for demo
-  function generateFakeHash(seed: string): string {
-    let h = 0xdeadbeef;
-    for (let i = 0; i < seed.length; i++) {
-      h = Math.imul(h ^ seed.charCodeAt(i), 2654435761);
-    }
-    const base = (h >>> 0).toString(16);
-    return (base.repeat(16)).substring(0, 64);
-  }
 
   const sectionTitle: Record<Section, string> = {
     scanner: 'Neural_Scanner',

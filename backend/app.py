@@ -13,7 +13,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from api.scanner import scanner
 from blockchain.ledger import ledger
-from backend.auth_service import generate_otp, send_otp_email, verify_otp
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -39,13 +38,6 @@ class PredictionResponse(BaseModel):
     confidence: float
     timestamp: str
     signals: List[str] = []
-
-class OTPRequest(BaseModel):
-    email: str
-
-class OTPVerifyRequest(BaseModel):
-    email: str
-    otp: str
 
 # Logging helper
 LOG_FILE = "logs/phishing_logs.txt"
@@ -134,23 +126,6 @@ async def get_stats():
         "phishing_detected": len([l for l in logs if l['prediction'] == 'phishing']),
         "recent_alerts": [l for l in logs if l['prediction'] == 'phishing'][-5:]
     }
-
-# --- AUTH ENDPOINTS ---
-
-@app.post("/auth/send-otp")
-async def api_send_otp(request: OTPRequest):
-    otp = generate_otp()
-    success, message = send_otp_email(request.email, otp)
-    if not success:
-        raise HTTPException(status_code=500, detail=message)
-    return {"message": message}
-
-@app.post("/auth/verify-otp")
-async def api_verify_otp(request: OTPVerifyRequest):
-    success, message = verify_otp(request.email, request.otp)
-    if not success:
-        raise HTTPException(status_code=400, detail=message)
-    return {"message": message}
 
 @app.get("/blockchain")
 async def get_blockchain():

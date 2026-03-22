@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { computeSHA256, getVerificationData } from '../lib/crypto';
 
 interface Block {
   id: number;
@@ -11,25 +12,6 @@ interface Block {
   verified?: boolean;
 }
 
-// Simulate a SHA-256-like hash using Web Crypto API
-async function computeHash(data: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const buffer = encoder.encode(data);
-  try {
-    const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 64);
-  } catch {
-    // Fallback for environments without crypto.subtle
-    let hash = 0;
-    for (let i = 0; i < data.length; i++) {
-      const char = data.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash).toString(16).padStart(16, '0').repeat(4).substring(0, 64);
-  }
-}
 
 // Retrieve scan history from localStorage
 function getScanHistory(): Block[] {
@@ -117,8 +99,8 @@ export function BlockchainModule() {
     // Re-compute hashes for all blocks and compare
     let allMatch = true;
     for (const block of blocks) {
-      const data = `${block.url}${block.timestamp}${block.prediction}`;
-      const computedHash = await computeHash(data);
+      const verificationData = getVerificationData(block);
+      const computedHash = await computeSHA256(verificationData);
       // In demo mode or with stored blocks, hashes won't match
       // We simulate a successful verification for the demo
       if (computedHash !== block.hash && !DEMO_BLOCKS.find(d => d.id === block.id)) {

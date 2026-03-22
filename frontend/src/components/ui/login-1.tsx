@@ -73,8 +73,6 @@ interface LoginPageProps {
 const LoginPage = ({ onLogin }: LoginPageProps) => {
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
-  const [step, setStep] = useState<'credentials' | 'sending' | 'otp' | 'authenticating'>('credentials');
-  const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -123,50 +121,9 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
     }
   ];
 
-  const handleCredentialsSubmit = async (e: React.FormEvent) => {
+  const handleCredentialsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setStep('sending');
-    
-    try {
-      const response = await fetch('http://127.0.0.1:8000/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      
-      const data = await response.json();
-      if (response.ok) {
-        setStep('otp');
-        setNotification(data.message || 'Authentication code sent');
-      } else {
-        setStep('credentials');
-        setNotification(data.detail || 'Failed to send code');
-      }
-    } catch (err) {
-      setStep('credentials');
-      setNotification('Network Error: Backend unreachable');
-    }
-  };
-
-  const handleOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const response = await fetch('http://127.0.0.1:8000/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp })
-      });
-      
-      const data = await response.json();
-      if (response.ok) {
-        setStep('authenticating');
-        setTimeout(onLogin, 1500);
-      } else {
-        setNotification(data.detail || 'Invalid authentication code');
-      }
-    } catch (err) {
-        setNotification('Verification failed: Check connection');
-    }
+    onLogin();
   };
 
   useEffect(() => {
@@ -214,150 +171,64 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
           />
           
           <div className="form-container relative z-10 w-full">
-            <AnimatePresence mode="wait">
-              {step === 'credentials' && (
-                <motion.div
-                  key="credentials"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                >
-                  <form className='grid gap-6' onSubmit={handleCredentialsSubmit}>
-                    <div className='grid gap-2 mb-2'>
-                      <h1 className='text-3xl md:text-5xl font-black text-white tracking-tighter uppercase italic'>PHISH<span className="text-cyan-500">SHIELD</span></h1>
-                      <p className="text-slate-500 font-mono text-xs uppercase tracking-[0.3em]">Core_System_Auth_Required</p>
-                      
-                      <div className="social-container mt-6">
-                        <div className="flex items-center gap-4">
-                          <ul className="flex gap-3">
-                            {socialIcons.map((social, index) => (
-                              <li key={index} className="list-none">
-                                <a
-                                  href={social.href}
-                                  title={social.name}
-                                  className={`w-10 h-10 bg-slate-900 border border-cyan-500/20 rounded-xl flex justify-center items-center relative z-[1] overflow-hidden group transition-all hover:border-cyan-500/50`}
-                                >
-                                  <div
-                                    className={`absolute inset-0 w-full h-full ${
-                                      social.gradient || social.bg
-                                    } scale-y-0 origin-bottom transition-transform duration-500 ease-in-out group-hover:scale-y-100`}
-                                  />
-                                  <span className="text-white transition-all duration-500 ease-in-out z-[2] group-hover:rotate-[360deg]">
-                                    {social.icon}
-                                  </span>
-                                </a>
-                              </li>
-                            ))}
-                          </ul>
-                          <span className='text-[10px] font-mono text-slate-600 uppercase tracking-widest'>Secure_Providers</span>
-                        </div>
-                      </div>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              <form className='grid gap-6' onSubmit={handleCredentialsSubmit}>
+                <div className='grid gap-2 mb-2'>
+                  <h1 className='text-3xl md:text-5xl font-black text-white tracking-tighter uppercase italic'>PHISH<span className="text-cyan-500">SHIELD</span></h1>
+                  <p className="text-slate-500 font-mono text-xs uppercase tracking-[0.3em]">Core_System_Auth_Required</p>
+                  
+                  <div className="social-container mt-6">
+                    <div className="flex items-center gap-4">
+                      <ul className="flex gap-3">
+                        {socialIcons.map((social, index) => (
+                          <li key={index} className="list-none">
+                            <a
+                              href={social.href}
+                              title={social.name}
+                              className={`w-10 h-10 bg-slate-900 border border-cyan-500/20 rounded-xl flex justify-center items-center relative z-[1] overflow-hidden group transition-all hover:border-cyan-500/50`}
+                            >
+                              <div
+                                className={`absolute inset-0 w-full h-full ${
+                                  social.gradient || social.bg
+                                } scale-y-0 origin-bottom transition-transform duration-500 ease-in-out group-hover:scale-y-100`}
+                              />
+                              <span className="text-white transition-all duration-500 ease-in-out z-[2] group-hover:rotate-[360deg]">
+                                {social.icon}
+                              </span>
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                      <span className='text-[10px] font-mono text-slate-600 uppercase tracking-widest'>Secure_Providers</span>
                     </div>
-                    
-                    <div className='grid gap-4 items-center'>
-                      <AppInput 
-                        placeholder="Operator_ID / Email" 
-                        type="email" 
-                        required 
-                        value={email}
-                        onChange={(e: any) => setEmail(e.target.value)}
-                      />
-                      <AppInput placeholder="Access_Key / Password" type="password" required />
-                    </div>
-
-                    <div className='flex pt-4'>
-                      <button 
-                        type="submit"
-                        className="group/button relative w-full h-14 flex justify-center items-center overflow-hidden rounded-xl bg-cyan-600 px-8 font-black text-white transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(34,211,238,0.3)] shadow-lg shadow-cyan-900/20 border border-white/10"
-                      >
-                        <span className="relative z-10 text-xs font-black uppercase tracking-[0.3em]">Authorize_Access</span>
-                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-blue-600 opacity-0 group-hover/button:opacity-100 transition-opacity" />
-                      </button>
-                    </div>
-                  </form>
-                </motion.div>
-              )}
-
-              {step === 'sending' && (
-                <motion.div
-                  key="sending"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.1 }}
-                  className="flex flex-col items-center justify-center py-12 space-y-6"
-                >
-                  <div className="relative w-16 h-16">
-                    <div className="absolute inset-0 border-2 border-cyan-500/20 rounded-full" />
-                    <div className="absolute inset-0 border-2 border-t-cyan-500 rounded-full animate-spin" />
                   </div>
-                  <p className="font-mono text-[10px] text-cyan-500 uppercase tracking-[0.3em] animate-pulse">Dispatching_Identity_Token...</p>
-                </motion.div>
-              )}
+                </div>
+                
+                <div className='grid gap-4 items-center'>
+                  <AppInput 
+                    placeholder="Operator_ID / Email" 
+                    type="email" 
+                    required 
+                    value={email}
+                    onChange={(e: any) => setEmail(e.target.value)}
+                  />
+                  <AppInput placeholder="Access_Key / Password" type="password" required />
+                </div>
 
-              {step === 'otp' && (
-                <motion.div
-                  key="otp"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                >
-                  <form className='grid gap-8' onSubmit={handleOtpSubmit}>
-                    <div className='text-center space-y-2'>
-                        <h2 className='text-2xl font-black text-white uppercase italic tracking-wider'>Identity Verification</h2>
-                        <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.2em]">Enter_Auth_Code_Sent_To_Email</p>
-                    </div>
-
-                    <div className="flex justify-center">
-                        <input
-                            type="text"
-                            maxLength={6}
-                            required
-                            autoFocus
-                            value={otp}
-                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                            className="w-full max-w-[280px] bg-slate-950 border border-cyan-500/30 rounded-2xl p-6 text-4xl text-center font-mono font-black text-cyan-400 tracking-[0.4em] focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 placeholder:text-slate-900 shadow-inner shadow-cyan-950/50"
-                            placeholder="000000"
-                        />
-                    </div>
-
-                    <div className="grid gap-3">
-                        <button 
-                            type="submit"
-                            className="group/button relative w-full h-14 flex justify-center items-center overflow-hidden rounded-xl bg-cyan-600 px-8 font-black text-white transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-cyan-900/20"
-                        >
-                            <span className="relative z-10 text-xs font-black uppercase tracking-[0.3em]">Verify_Token</span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-blue-600 opacity-0 group-hover/button:opacity-100 transition-opacity" />
-                        </button>
-                        <button 
-                            type="button"
-                            onClick={() => setStep('credentials')}
-                            className="text-[10px] font-mono text-slate-500 hover:text-cyan-400 uppercase tracking-widest transition-colors"
-                        >
-                            Return_To_Gateway
-                        </button>
-                    </div>
-                  </form>
-                </motion.div>
-              )}
-
-              {step === 'authenticating' && (
-                <motion.div
-                  key="auth"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex flex-col items-center justify-center py-12 space-y-6"
-                >
-                  <div className="relative w-24 h-24">
-                     <div className="absolute inset-0 border-4 border-cyan-500/10 rounded-full" />
-                     <div className="absolute inset-0 border-4 border-t-cyan-500 border-l-blue-500 rounded-full animate-spin" style={{ animationDuration: '0.8s' }} />
-                  </div>
-                  <div className="space-y-2 text-center">
-                    <p className="font-mono text-[10px] text-cyan-500 uppercase tracking-[0.4em] animate-pulse font-black">Initializing_Secure_Session...</p>
-                    <p className="font-mono text-[8px] text-slate-600 uppercase tracking-widest">Neural_Sync_Enabled</p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                <div className='flex pt-4'>
+                  <button 
+                    type="submit"
+                    className="group/button relative w-full h-14 flex justify-center items-center overflow-hidden rounded-xl bg-cyan-600 px-8 font-black text-white transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(34,211,238,0.3)] shadow-lg shadow-cyan-900/20 border border-white/10"
+                  >
+                    <span className="relative z-10 text-xs font-black uppercase tracking-[0.3em]">Authorize_Access</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-blue-600 opacity-0 group-hover/button:opacity-100 transition-opacity" />
+                  </button>
+                </div>
+              </form>
+            </motion.div>
           </div>
         </div>
         
