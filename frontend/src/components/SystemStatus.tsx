@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from 'react';
 
 const STATUS_ITEMS = [
   { name: 'Neural_Engine', status: 'Online', color: 'text-cyan-500' },
@@ -8,6 +9,18 @@ const STATUS_ITEMS = [
 ];
 
 export function SystemStatus() {
+  const [load, setLoad] = useState(24);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLoad(prev => {
+        const drift = Math.random() * 4 - 2;
+        return Math.max(15, Math.min(45, prev + drift));
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="glass-card bg-slate-950/40 p-6 border border-cyan-500/10 rounded-2xl">
       <h3 className="text-xs font-mono font-black text-slate-500 uppercase tracking-[0.3em] mb-6 px-2 border-l-2 border-emerald-500">System_Monitoring</h3>
@@ -29,10 +42,10 @@ export function SystemStatus() {
       <div className="mt-8 pt-6 border-t border-white/[0.03]">
         <div className="flex justify-between items-center mb-2">
           <span className="text-[9px] font-mono font-bold text-slate-600 uppercase">Load_Distribution</span>
-          <span className="text-[9px] font-mono font-bold text-cyan-500">24%</span>
+          <span className="text-[9px] font-mono font-bold text-cyan-500">{load.toFixed(1)}%</span>
         </div>
         <div className="w-full h-1 bg-slate-900 rounded-full overflow-hidden border border-white/5">
-          <div className="w-[24%] h-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
+          <div className="h-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)] transition-all duration-1000" style={{ width: `${load}%` }} />
         </div>
       </div>
     </div>

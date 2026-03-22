@@ -75,6 +75,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
   const [isHovering, setIsHovering] = useState(false);
   const [step, setStep] = useState<'credentials' | 'sending' | 'otp' | 'authenticating'>('credentials');
   const [otp, setOtp] = useState('');
+  const [email, setEmail] = useState('');
   const [notification, setNotification] = useState<string | null>(null);
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -122,25 +123,49 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
     }
   ];
 
-  const handleCredentialsSubmit = (e: React.FormEvent) => {
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStep('sending');
     
-    // Simulate sending email
-    setTimeout(() => {
-      setStep('otp');
-      setNotification('Authentication code sent: 123456');
-      console.log("[SYSTEM] Dev Mode: OTP is 123456");
-    }, 1500);
+    try {
+      const response = await fetch('http://127.0.0.1:8000/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      
+      const data = await response.json();
+      if (response.ok) {
+        setStep('otp');
+        setNotification(data.message || 'Authentication code sent');
+      } else {
+        setStep('credentials');
+        setNotification(data.detail || 'Failed to send code');
+      }
+    } catch (err) {
+      setStep('credentials');
+      setNotification('Network Error: Backend unreachable');
+    }
   };
 
-  const handleOtpSubmit = (e: React.FormEvent) => {
+  const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp === '123456') {
-      setStep('authenticating');
-      setTimeout(onLogin, 1500);
-    } else {
-      setNotification('Invalid Code. Hint: 123456');
+    try {
+      const response = await fetch('http://127.0.0.1:8000/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp })
+      });
+      
+      const data = await response.json();
+      if (response.ok) {
+        setStep('authenticating');
+        setTimeout(onLogin, 1500);
+      } else {
+        setNotification(data.detail || 'Invalid authentication code');
+      }
+    } catch (err) {
+        setNotification('Verification failed: Check connection');
     }
   };
 
@@ -230,7 +255,13 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                     </div>
                     
                     <div className='grid gap-4 items-center'>
-                      <AppInput placeholder="Operator_ID / Email" type="email" required />
+                      <AppInput 
+                        placeholder="Operator_ID / Email" 
+                        type="email" 
+                        required 
+                        value={email}
+                        onChange={(e: any) => setEmail(e.target.value)}
+                      />
                       <AppInput placeholder="Access_Key / Password" type="password" required />
                     </div>
 
