@@ -7,12 +7,16 @@ import datetime
 import json
 import sys
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Add the project root to sys.path for imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from api.scanner import scanner
 from blockchain.ledger import ledger
+from backend.database import db_manager
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -43,6 +47,13 @@ class PredictionResponse(BaseModel):
 LOG_FILE = "logs/phishing_logs.txt"
 
 def log_prediction(data_type, input_data, prediction, confidence, signals=[]):
+    # 1. MongoDB Logging (Primary)
+    try:
+        db_manager.log_scan(data_type, input_data, prediction, confidence, signals)
+    except Exception as e:
+        print(f"MongoDB Logging Error: {e}")
+
+    # 2. File Logging (Fallback/Audit)
     if not os.path.exists('logs'):
         os.makedirs('logs')
     
@@ -112,20 +123,26 @@ async def predict_email(request: EmailRequest):
 
 @app.get("/stats")
 async def get_stats():
-    # Simple stats from logs
-    if not os.path.exists(LOG_FILE):
-        return {"total_scanned": 0, "phishing_detected": 0, "recent_alerts": []}
-    
-    logs = []
-    with open(LOG_FILE, "r") as f:
-        for line in f:
-            logs.append(json.loads(line))
-    
-    return {
-        "total_scanned": len(logs),
-        "phishing_detected": len([l for l in logs if l['prediction'] == 'phishing']),
-        "recent_alerts": [l for l in logs if l['prediction'] == 'phishing'][-5:]
-    }
+    # Attempt to get stats from MongoDB primarily
+    try:
+        stats = db_manager.get_stats()
+        return stats
+    except Exception as e:
+        print(f"MongoDB Stats Error: {e}")
+        # Fallback to file logs if MongoDB is down
+        if not os.path.exists(LOG_FILE):
+            return {"total_scanned": 0, "phishing_detected": 0, "recent_alerts": []}
+        
+        logs = []
+        with open(LOG_FILE, "r") as f:
+            for line in f:
+                logs.append(json.loads(line))
+        
+        return {
+            "total_scanned": len(logs),
+            "phishing_detected": len([l for l in logs if l['prediction'] == 'phishing']),
+            "recent_alerts": [l for l in logs if l['prediction'] == 'phishing'][-5:]
+        }
 
 @app.get("/blockchain")
 async def get_blockchain():
@@ -149,4 +166,5 @@ app.mount("/", StaticFiles(directory="frontend/dist"), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)

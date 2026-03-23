@@ -2,18 +2,18 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ActivityFeed } from '../components/ActivityFeed';
 import { ThreatIntelligence } from '../components/ThreatIntelligence';
-import { SystemStatus } from '../components/SystemStatus';
 import { ScannerCard } from '../components/ScannerCard';
 import { BlockchainModule } from '../components/BlockchainModule';
+import { Settings } from '../components/Settings';
 import { computeSHA256, getVerificationData } from '../lib/crypto';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 interface DashboardProps {
   onLogout: () => void;
 }
 
-type Section = 'scanner' | 'analytics' | 'blockchain' | 'logs';
+type Section = 'scanner' | 'analytics' | 'blockchain' | 'logs' | 'settings';
 
 const NAV_ITEMS: { id: Section; label: string; icon: React.ReactNode }[] = [
   {
@@ -59,16 +59,9 @@ const NAV_ITEMS: { id: Section; label: string; icon: React.ReactNode }[] = [
   },
 ];
 
-const SECONDARY_NAV: { label: string; icon: React.ReactNode }[] = [
+const SECONDARY_NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
   {
-    label: 'System Status',
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      </svg>
-    ),
-  },
-  {
+    id: 'settings',
     label: 'Settings',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -137,19 +130,21 @@ export function Dashboard(props: DashboardProps) {
 
     // Persist to localStorage for blockchain ledger
     const history = JSON.parse(localStorage.getItem('phishShieldScanHistory') || '[]');
+    const timestamp = result.timestamp || new Date().toISOString();
+    
     const verificationData = getVerificationData({
       url,
-      timestamp: result.timestamp || new Date().toISOString(),
+      timestamp,
       prediction: result.prediction
     });
     
     const newEntry = {
-      id: history.length + 1,
+      id: Date.now(), // Use timestamp for unique ID to avoid collisions with demo blocks
       hash: await computeSHA256(verificationData),
       url,
       prediction: result.prediction,
       confidence: result.confidence,
-      timestamp: result.timestamp || new Date().toISOString(),
+      timestamp,
     };
     history.unshift(newEntry);
     localStorage.setItem('phishShieldScanHistory', JSON.stringify(history.slice(0, 20)));
@@ -182,19 +177,22 @@ export function Dashboard(props: DashboardProps) {
     }
     // Persist email scans to ledger too
     const history = JSON.parse(localStorage.getItem('phishShieldScanHistory') || '[]');
+    const timestamp = result.timestamp || new Date().toISOString();
+    const shortUrl = email_text.substring(0, 50) + '...';
+
     const verificationData = getVerificationData({
-      url: email_text.substring(0, 50) + '...', // use snippet as identifier
-      timestamp: result.timestamp || new Date().toISOString(),
+      url: shortUrl,
+      timestamp,
       prediction: result.prediction
     });
     
     const newEntry = {
-      id: history.length + 1,
+      id: Date.now() + 1, // Slight offset to ensure uniqueness if both scans run very close
       hash: await computeSHA256(verificationData),
-      url: email_text.substring(0, 50) + '...',
+      url: shortUrl,
       prediction: result.prediction,
       confidence: result.confidence,
-      timestamp: result.timestamp || new Date().toISOString(),
+      timestamp,
     };
     history.unshift(newEntry);
     localStorage.setItem('phishShieldScanHistory', JSON.stringify(history.slice(0, 20)));
@@ -210,6 +208,7 @@ export function Dashboard(props: DashboardProps) {
     analytics: 'Analytics_Console',
     blockchain: 'Blockchain_Ledger',
     logs: 'Threat_Logs',
+    settings: 'Configuration_Node',
   };
 
   return (
@@ -253,10 +252,14 @@ export function Dashboard(props: DashboardProps) {
             <span className="text-[9px] font-mono font-bold text-slate-600 uppercase tracking-[0.25em]">System</span>
           </div>
           {SECONDARY_NAV.map((item) => (
-            <div key={item.label} className="sidebar-item cursor-not-allowed opacity-50">
+            <button
+              key={item.id}
+              onClick={() => setActiveSection(item.id)}
+              className={`sidebar-item w-full text-left ${activeSection === item.id ? 'sidebar-item-active' : ''}`}
+            >
               <span className="flex-shrink-0">{item.icon}</span>
               <span>{item.label}</span>
-            </div>
+            </button>
           ))}
         </nav>
 
@@ -397,7 +400,6 @@ export function Dashboard(props: DashboardProps) {
                   </div>
                   <div className="col-span-12 lg:col-span-4 space-y-6">
                     <ActivityFeed />
-                    <SystemStatus />
                   </div>
                 </div>
               </motion.div>
@@ -430,7 +432,19 @@ export function Dashboard(props: DashboardProps) {
                 <div className="lg:col-span-2">
                   <ActivityFeed expanded />
                 </div>
-                <SystemStatus />
+              </motion.div>
+            )}
+
+            {activeSection === 'settings' && (
+              <motion.div
+                key="settings"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+                className="max-w-4xl"
+              >
+                <Settings />
               </motion.div>
             )}
 

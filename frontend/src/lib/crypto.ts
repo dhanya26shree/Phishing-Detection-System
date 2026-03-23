@@ -19,5 +19,10 @@ export async function computeSHA256(data: string): Promise<string> {
 }
 
 export function getVerificationData(block: { url: string; timestamp: string; prediction: string }): string {
-  return `${block.url}|${block.timestamp}|${block.prediction}`;
+  // Use JSON.stringify for absolute consistency in property ordering and typing
+  return JSON.stringify({
+    url: block.url,
+    timestamp: block.timestamp,
+    prediction: block.prediction
+  });
 }

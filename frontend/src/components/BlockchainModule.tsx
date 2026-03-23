@@ -35,31 +35,31 @@ const ChainIcon = () => (
   </svg>
 );
 
-// Demo blocks if no real scans
+// Demo blocks with static timestamps and hashes for consistent verification
 const DEMO_BLOCKS: Block[] = [
   {
     id: 1,
-    hash: 'a3f2e1d4c5b6a7f8e9d0c1b2a3f4e5d6c7b8a9f0e1d2c3b4a5f6e7d8c9b0a1f2',
+    hash: '5200197c2b9ef5443e2ca8f85f1c4e5d6c7b8a9f0e1d2c3b4a5f6e7d8c9b0a1f',
     url: 'https://secure-bank-verify.xyz/login',
     prediction: 'phishing',
     confidence: 0.9823,
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
+    timestamp: '2026-03-23T18:00:00.000Z',
   },
   {
     id: 2,
-    hash: 'b4e3f2a1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3',
+    hash: 'b4e3f2a1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a',
     url: 'https://google.com',
     prediction: 'safe',
     confidence: 0.9991,
-    timestamp: new Date(Date.now() - 7200000).toISOString(),
+    timestamp: '2026-03-23T17:00:00.000Z',
   },
   {
     id: 3,
-    hash: 'c5d4e3f2a1b0c9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4',
+    hash: 'c5d4e3f2a1b0c9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a',
     url: 'https://paypal-secure-alert.net',
     prediction: 'suspicious',
     confidence: 0.7234,
-    timestamp: new Date(Date.now() - 10800000).toISOString(),
+    timestamp: '2026-03-23T16:00:00.000Z',
   },
 ];
 
@@ -67,6 +67,7 @@ export function BlockchainModule() {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [verifying, setVerifying] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'success' | 'fail'>('idle');
+  const [failedBlockId, setFailedBlockId] = useState<number | null>(null);
   const [hoveredBlock, setHoveredBlock] = useState<number | null>(null);
 
   useEffect(() => {
@@ -98,20 +99,61 @@ export function BlockchainModule() {
 
     // Re-compute hashes for all blocks and compare
     let allMatch = true;
+    let failedId = null;
+
     for (const block of blocks) {
+      const blockId = Number(block.id);
+      const isDemo = DEMO_BLOCKS.some(d => d.id === blockId);
+      if (isDemo) continue;
+
       const verificationData = getVerificationData(block);
       const computedHash = await computeSHA256(verificationData);
-      // In demo mode or with stored blocks, hashes won't match
-      // We simulate a successful verification for the demo
-      if (computedHash !== block.hash && !DEMO_BLOCKS.find(d => d.id === block.id)) {
+      
+      if (computedHash !== block.hash) {
         allMatch = false;
+        failedId = blockId;
+        console.warn(`Integrity fail at block #${blockId} | URL: ${block.url}`);
+        break;
       }
     }
 
-    await new Promise(r => setTimeout(r, 2200)); // simulate processing
+    await new Promise(r => setTimeout(r, 1200));
     setVerifying(false);
+    setFailedBlockId(failedId);
     setVerificationStatus(allMatch ? 'success' : 'fail');
-    setTimeout(() => setVerificationStatus('idle'), 4000);
+    setTimeout(() => {
+      setVerificationStatus('idle');
+      setFailedBlockId(null);
+    }, 5000);
+  };
+
+  const handleRepair = async () => {
+    if (confirm('Attempt to repair integrity by re-synchronizing all block hashes?')) {
+      const history = getScanHistory();
+      if (history.length === 0) {
+        setVerificationStatus('success');
+        setTimeout(() => setVerificationStatus('idle'), 3000);
+        return;
+      }
+      
+      const repaired = await Promise.all(history.map(async (block) => {
+        const verificationData = getVerificationData(block);
+        const newHash = await computeSHA256(verificationData);
+        return { ...block, hash: newHash };
+      }));
+      localStorage.setItem('phishShieldScanHistory', JSON.stringify(repaired));
+      setBlocks(repaired.slice(0, 5));
+      setVerificationStatus('success');
+      setTimeout(() => setVerificationStatus('idle'), 3000);
+    }
+  };
+
+  const handleClearHistory = () => {
+    if (confirm('Clear the Threat Ledger history? This will remove all local records.')) {
+      localStorage.removeItem('phishShieldScanHistory');
+      setBlocks(DEMO_BLOCKS);
+      window.dispatchEvent(new Event('phishshield-new-scan')); // trigger stats update
+    }
   };
 
   return (
@@ -135,26 +177,40 @@ export function BlockchainModule() {
           </p>
         </div>
 
-        <button
-          onClick={handleVerify}
-          disabled={verifying}
-          className="btn-cyber flex items-center gap-2"
-        >
-          {verifying ? (
-            <>
-              <div className="h-3 w-3 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
-              Verifying Chain...
-            </>
-          ) : (
-            <>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M9 12l2 2 4-4" />
-                <path d="M12 3C7.03 3 3 7.03 3 12s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9z" />
-              </svg>
-              Verify Integrity
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleRepair}
+            className="px-3 py-1.5 rounded-lg border border-cyan-500/20 text-[10px] font-mono text-cyan-700 hover:text-cyan-400 hover:border-cyan-500/40 transition-all uppercase tracking-widest"
+          >
+            Repair Chain
+          </button>
+          <button
+            onClick={handleClearHistory}
+            className="px-3 py-1.5 rounded-lg border border-slate-700/50 text-[10px] font-mono text-slate-500 hover:text-red-400 hover:border-red-500/30 transition-all uppercase tracking-widest"
+          >
+            Clear Ledger
+          </button>
+          <button
+            onClick={handleVerify}
+            disabled={verifying}
+            className="btn-cyber flex items-center gap-2"
+          >
+            {verifying ? (
+              <>
+                <div className="h-3 w-3 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
+                Verifying Chain...
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M9 12l2 2 4-4" />
+                  <path d="M12 3C7.03 3 3 7.03 3 12s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9z" />
+                </svg>
+                Verify Integrity
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Verification Result Banner */}
@@ -173,7 +229,7 @@ export function BlockchainModule() {
             <div className={`w-2 h-2 rounded-full animate-pulse ${verificationStatus === 'success' ? 'bg-emerald-500' : 'bg-red-500'}`} />
             {verificationStatus === 'success'
               ? '✓ All block hashes verified — Chain integrity confirmed'
-              : '✗ Hash mismatch detected — Chain integrity compromised'}
+              : `✗ Hash mismatch at Block #${failedBlockId} — Integrity compromised`}
           </motion.div>
         )}
       </AnimatePresence>
