@@ -16,3 +16,8 @@ seaborn
 chart-studio
 python-dotenv
 virustotal-api
+pymongo
+gunicorn
+python-dotenv
+uvicorn
+gunicorn[standard]
