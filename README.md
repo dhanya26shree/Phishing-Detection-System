@@ -1,3 +1,12 @@
+---
+title: PhishShield-API
+emoji: 🛡️
+colorFrom: cyan
+colorTo: blue
+sdk: docker
+pinned: false
+---
+
 # Real-Time AI/ML-Based Phishing Detection & Prevention System
 
 A production-grade cybersecurity intelligence system designed to detect and block phishing attacks in real-time using advanced Machine Learning and Natural Language Processing.
