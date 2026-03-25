@@ -1,8 +1,8 @@
 ---
 title: PhishShield API
 emoji: 🛡️
-colorFrom: cyan
-colorTo: blue
+colorFrom: blue
+colorTo: indigo
 sdk: docker
 app_port: 7860
 ---
