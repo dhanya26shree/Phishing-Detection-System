@@ -71,12 +71,16 @@ def log_prediction(data_type, input_data, prediction, confidence, signals=[]):
 
 @app.get("/")
 async def read_root():
-    return FileResponse('frontend/dist/index.html')
+    if os.path.exists('frontend/dist/index.html'):
+        return FileResponse('frontend/dist/index.html')
+    return {"status": "PhishShield AI API active", "version": "1.0.0"}
 
 @app.get("/dashboard")
 async def read_dashboard():
-    # React Router handles dashboard in a SPA, but for now we serve index
-    return FileResponse('frontend/dist/index.html')
+    # The frontend is hosted on Vercel
+    if os.path.exists('frontend/dist/index.html'):
+        return FileResponse('frontend/dist/index.html')
+    return {"status": "Dashboard available via Vercel frontend"}
 
 @app.post("/predict-url", response_model=PredictionResponse)
 async def predict_url(request: URLRequest):
@@ -159,10 +163,9 @@ async def get_blockchain():
         ]
     }
 
-# Mount the static files (js, css, etc.)
-# We mount this at root but at the very end. 
-# Explicitly serving HTML above is better.
-app.mount("/", StaticFiles(directory="frontend/dist"), name="frontend")
+# Mount the static files (js, css, etc.) if they exist locally
+if os.path.exists("frontend/dist"):
+    app.mount("/", StaticFiles(directory="frontend/dist"), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn
