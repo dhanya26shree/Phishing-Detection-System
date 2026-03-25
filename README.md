@@ -1,10 +1,10 @@
 ---
-title: PhishShield-API
+title: PhishShield API
 emoji: 🛡️
 colorFrom: cyan
 colorTo: blue
 sdk: docker
-pinned: false
+app_port: 7860
 ---
 
 # Real-Time AI/ML-Based Phishing Detection & Prevention System
