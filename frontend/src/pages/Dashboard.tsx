@@ -9,10 +9,9 @@ import { computeSHA256, getVerificationData } from '../lib/crypto';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
-interface DashboardProps {
-}
 
 type Section = 'scanner' | 'analytics' | 'blockchain' | 'logs' | 'settings';
+
 
 const NAV_ITEMS: { id: Section; label: string; icon: React.ReactNode }[] = [
   {
