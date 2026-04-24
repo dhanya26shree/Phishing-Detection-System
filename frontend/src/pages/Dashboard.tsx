@@ -10,7 +10,6 @@ import { computeSHA256, getVerificationData } from '../lib/crypto';
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 interface DashboardProps {
-  onLogout: () => void;
 }
 
 type Section = 'scanner' | 'analytics' | 'blockchain' | 'logs' | 'settings';
@@ -72,8 +71,7 @@ const SECONDARY_NAV: { id: Section; label: string; icon: React.ReactNode }[] = [
   },
 ];
 
-export function Dashboard(props: DashboardProps) {
-  const { onLogout } = props;
+export function Dashboard() {
   const [activeSection, setActiveSection] = useState<Section>('scanner');
   const [stats, setStats] = useState({ total_scanned: 0, phishing_detected: 0 });
 
@@ -283,21 +281,6 @@ export function Dashboard(props: DashboardProps) {
             <span>Threat_Rate</span>
             <span>{stats.total_scanned > 0 ? ((stats.phishing_detected / stats.total_scanned) * 100).toFixed(1) : '0.0'}%</span>
           </div>
-        </div>
-
-        {/* Logout */}
-        <div className="border-t border-cyan-500/10 p-4">
-          <button
-            onClick={onLogout}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10 hover:border-red-500/40 transition-all text-[10px] font-mono font-bold uppercase tracking-widest"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-            Logout_Session
-          </button>
         </div>
       </aside>
 

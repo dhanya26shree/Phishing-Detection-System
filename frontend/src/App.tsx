@@ -1,19 +1,17 @@
 import { useState, useEffect } from 'react'
 import { LandingPage } from './pages/LandingPage'
-import LoginPage from './components/ui/login-1'
 import { Dashboard } from './pages/Dashboard'
 import { motion, AnimatePresence } from 'framer-motion'
 
 function App() {
-  const [currentView, setCurrentView] = useState<'landing' | 'login' | 'dashboard'>('login');
+  const [currentView, setCurrentView] = useState<'landing' | 'dashboard'>('dashboard');
 
   // Handle URL sync and browser back/forward
   useEffect(() => {
     const handlePath = () => {
       const path = window.location.pathname;
       if (path === '/landing') setCurrentView('landing');
-      else if (path === '/dashboard') setCurrentView('dashboard');
-      else setCurrentView('login');
+      else setCurrentView('dashboard');
     };
 
     handlePath();
@@ -21,9 +19,9 @@ function App() {
     return () => window.removeEventListener('popstate', handlePath);
   }, []);
 
-  const navigateTo = (view: 'landing' | 'login' | 'dashboard') => {
+  const navigateTo = (view: 'landing' | 'dashboard') => {
     setCurrentView(view);
-    window.history.pushState({}, '', view === 'login' ? '/' : `/${view}`);
+    window.history.pushState({}, '', view === 'dashboard' ? '/' : `/${view}`);
   };
 
   return (
@@ -39,19 +37,7 @@ function App() {
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.4 }}
             >
-              <LandingPage onLogin={() => navigateTo('login')} />
-            </motion.div>
-          )}
-
-          {currentView === 'login' && (
-            <motion.div
-              key="login"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.05 }}
-              transition={{ duration: 0.3 }}
-            >
-              <LoginPage onLogin={() => navigateTo('dashboard')} />
+              <LandingPage onEnterDashboard={() => navigateTo('dashboard')} />
             </motion.div>
           )}
 
@@ -63,7 +49,7 @@ function App() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
             >
-              <Dashboard onLogout={() => navigateTo('login')} />
+              <Dashboard />
             </motion.div>
           )}
         </AnimatePresence>

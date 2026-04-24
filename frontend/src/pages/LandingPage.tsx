@@ -5,11 +5,11 @@ import { motion } from 'framer-motion'
 const API_BASE = 'http://localhost:8000'
 
 interface LandingPageProps {
-  onLogin: () => void;
+  onEnterDashboard: () => void;
 }
 
 export function LandingPage(props: LandingPageProps) {
-  const { onLogin } = props;
+  const { onEnterDashboard } = props;
   const [stats, setStats] = useState({ total_scanned: 0, phishing_detected: 0 })
 
   const fetchStats = async () => {
@@ -76,10 +76,10 @@ export function LandingPage(props: LandingPageProps) {
           </div>
           
           <div className="hidden md:flex items-center gap-8">
-            <button onClick={onLogin} className="text-[10px] font-black text-slate-400 hover:text-cyan-400 uppercase tracking-widest transition-colors">Analyzer_Root</button>
-            <button onClick={onLogin} className="text-[10px] font-black text-slate-400 hover:text-cyan-400 uppercase tracking-widest transition-colors">Neural_Metrics</button>
-            <button onClick={onLogin} className="text-[10px] font-black text-slate-400 hover:text-cyan-400 uppercase tracking-widest transition-colors">Ledger_Explorer</button>
-            <button onClick={onLogin} className="btn-primary py-2 px-6">System.init()</button>
+            <button onClick={onEnterDashboard} className="text-[10px] font-black text-slate-400 hover:text-cyan-400 uppercase tracking-widest transition-colors">Analyzer_Root</button>
+            <button onClick={onEnterDashboard} className="text-[10px] font-black text-slate-400 hover:text-cyan-400 uppercase tracking-widest transition-colors">Neural_Metrics</button>
+            <button onClick={onEnterDashboard} className="text-[10px] font-black text-slate-400 hover:text-cyan-400 uppercase tracking-widest transition-colors">Ledger_Explorer</button>
+            <button onClick={onEnterDashboard} className="btn-primary py-2 px-6">System.init()</button>
           </div>
         </div>
       </nav>
@@ -122,7 +122,7 @@ export function LandingPage(props: LandingPageProps) {
 
           <div className="flex justify-center gap-6 mb-16">
             <button 
-              onClick={onLogin}
+              onClick={onEnterDashboard}
               className="px-8 py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-black uppercase tracking-widest text-xs transition-all shadow-xl shadow-cyan-900/40 active:scale-95 border border-white/10"
             >
               Start URL Scan
